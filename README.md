@@ -4,6 +4,11 @@ Este projeto é uma aplicação Java que simula um **sistema de consórcio de ve
 
 O sistema é executado via **linha de comando** e permite ao usuário pesquisar por **carros, motos ou caminhões**, filtrar modelos e visualizar avaliações por ano, servindo como uma ferramenta de apoio para escolha do melhor veículo.  
 
+Resultado:
+
+![tela-inicial](https://github.com/user-attachments/assets/9191ea71-a0ae-4a64-b1de-46be0e9f39b1)
+
+
 ---
 
 ## 🚀 Funcionalidades
