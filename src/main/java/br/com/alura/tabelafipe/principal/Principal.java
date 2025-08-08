@@ -18,93 +18,114 @@ public class Principal {
     private ConsumoApi consumoApi = new ConsumoApi();
     private final String URL_BASE = "https://parallelum.com.br/fipe/api/v1/";
     private ConverteDados conversor = new ConverteDados();
-
+    
 
     public void exibeMenu() {
-        var menu = """
-                Carro
-                Moto
-                Caminhão
-                
-                Digte uma das opções para consultar:
-                
-                """;
+    	
+    	System.out.println("""
+    		    ===============================================
+    		    | Consórcio Fipe Veículos para análise e compra |
+    		    | Acesse nossa tabela e veja qual o melhor      |
+    		    | veículo para o seu trabalho                   |
+    		    ===============================================
+    		    """);
 
-        System.out.println(menu);
-        var opcao = leitura.nextLine();
-
-        String endereco = "";
-
-        if(opcao.toLowerCase().contains("carr")) {
-            endereco = URL_BASE + "carros/marcas";
-        }else if (opcao.toLowerCase().contains("mot")) {
-            endereco = URL_BASE + "motos/marcas";
+    	
+        String tipo = solicitarEntrada("Tipo (carros, motos, caminhoes): ").toLowerCase();
+        if (!tipo.startsWith("car") && !tipo.startsWith("mot") && !tipo.startsWith("cam")) {
+            System.out.println("Tipo inválido.");
+            return;
         }
-        else if (opcao.toLowerCase().contains("cam")) {
-            endereco = URL_BASE + "caminhoes/marcas";
-        }else {
-            System.out.println("Veiculo não encontrado");
-        }
+        if (tipo.startsWith("car")) tipo = "carros";
+        if (tipo.startsWith("mot")) tipo = "motos";
+        if (tipo.startsWith("cam")) tipo = "caminhoes";
 
-        var json = consumoApi.obterDados(endereco);
-        System.out.println(json);
-
-        //Retorna uma lista das marcas conm dados(codigo e nome)
-        var marcas = conversor.obterLista(json, Dados.class);
-
-        marcas.stream()
-                .sorted(Comparator.comparing(Dados::codigo))
-                .forEach(System.out::println);
-
-        //Retorna as marcas pelo input do user do codigo da marca
-
-        System.out.println("\nInforme o código da marca para consulta.");
-        var codigoMarca = leitura.nextLine();
-        endereco = endereco + "/" + codigoMarca + "/modelos";
-        json = consumoApi.obterDados(endereco);
-        var modeloLista = conversor.obterDados(json, Modelos.class);
-
-        System.out.println("\nmodelos dessa marca: ");
-        modeloLista.modelos().stream()
-                .sorted(Comparator.comparing(Dados::codigo))
-                .forEach(System.out::println);
-
-        //Retorna  uma lista dos veiculos pelo input do nome
-        System.out.printf("\nDigite um trecho do %s a ser buscado.", opcao);
-        var nomeVeiculo = leitura.nextLine();
-
-        List<Dados> modelosFiltrados = modeloLista.modelos().stream()
-                .filter(m -> m.nome().toLowerCase().contains(nomeVeiculo.toLowerCase()))
-                .collect(Collectors.toList());
-
-        System.out.println("\nModelos Filtrados");
-        modelosFiltrados.forEach(System.out::println);
-
-        //Retorna o veiculo pelo input do codigo
-        System.out.println("\nDigite por favor o codigo do modelo para buscar os valores de avaliação");
-        var codigoModelo = leitura.nextLine();
-
-        endereco = endereco + "/" + codigoModelo + "/anos";
-        json = consumoApi.obterDados(endereco);
-
-        List<Dados> anos = conversor.obterLista(json, Dados.class);
-        
-        List<Veiculo> veiculos = new ArrayList<>();
-
-        for (int i = 0; i < anos.size(); i++) {
-            var enderecoAnos = endereco + "/" + anos.get(i).codigo();
-            json = consumoApi.obterDados(enderecoAnos);
-            Veiculo veiculo = conversor.obterDados(json, Veiculo.class);
-            veiculos.add(veiculo);
+        // Marca
+        String codigoMarca = solicitarEntrada("\nCódigo da marca (ou ENTER para acessar a lista): ");
+        if (codigoMarca.isBlank()) {
+            List<Dados> marcas = buscarMarcas(tipo);
+            marcas.forEach(m -> System.out.printf("%-6s | %s%n", m.codigo(), m.nome()));
+            codigoMarca = solicitarEntrada("Código da marca: ");
         }
 
-        System.out.println("\nTodos os veículos filtrados com avaliações por ano: ");
-        veiculos.forEach(System.out::println);
+        // Modelos
+        String trechoModelo = solicitarEntrada("\nCódigo do modelo (ou ENTER para acessar a lista): ");
+        List<Dados> modelos = buscarModelos(tipo, codigoMarca);
+        if (!trechoModelo.isBlank()) {
+            modelos = filtrarModelos(modelos, trechoModelo);
+        }
 
+        if (modelos.isEmpty()) {
+            System.out.println("Nenhum modelo encontrado.");
+            return;
+        }
 
+        if (modelos.size() == 1) {
+            System.out.println("Modelo encontrado: " + modelos.get(0).nome());
+            exibirVeiculos(tipo, codigoMarca, modelos.get(0).codigo());
+            return;
+        }
 
+        modelos.forEach(m -> System.out.printf("%-6s | %s%n", m.codigo(), m.nome()));
+        String codigoModelo = solicitarEntrada("Código do modelo (ou ENTER para acessar a lista): ");
+        if (codigoModelo.isBlank()) {
+            System.out.println("Nenhum modelo selecionado.");
+            return;
+        }
 
+        exibirVeiculos(tipo, codigoMarca, codigoModelo);
     }
 
+    private void exibirVeiculos(String tipo, String codigoMarca, String codigoModelo) {
+        List<Veiculo> veiculos = buscarVeiculosPorAno(tipo, codigoMarca, codigoModelo);
+        System.out.println("\nAvaliações por ano:");
+        veiculos.forEach(v ->
+                System.out.printf("%-10s | %-15s | %-25s | %-4d | %s%n",
+                        v.valor(), v.marca(), v.modelo(), v.ano(), v.tipoCombustivel()));
+    }
 
+    private List<Dados> buscarMarcas(String tipo) {
+        String url = URL_BASE + tipo + "/marcas";
+        String json = consumoApi.obterDados(url);
+        return conversor.obterLista(json, Dados.class)
+                .stream()
+                .sorted(Comparator.comparing(Dados::codigo))
+                .toList();
+    }
+
+    private List<Dados> buscarModelos(String tipo, String codigoMarca) {
+        String url = URL_BASE + tipo + "/marcas/" + codigoMarca + "/modelos";
+        String json = consumoApi.obterDados(url);
+        Modelos modelos = conversor.obterDados(json, Modelos.class);
+        return modelos.modelos()
+                .stream()
+                .sorted(Comparator.comparing(Dados::codigo))
+                .toList();
+    }
+
+    private List<Dados> filtrarModelos(List<Dados> modelos, String filtro) {
+        return modelos.stream()
+                .filter(m -> m.nome().toLowerCase().contains(filtro.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    private List<Veiculo> buscarVeiculosPorAno(String tipo, String codigoMarca, String codigoModelo) {
+        String url = URL_BASE + tipo + "/marcas/" + codigoMarca + "/modelos/" + codigoModelo + "/anos";
+        String json = consumoApi.obterDados(url);
+        List<Dados> anos = conversor.obterLista(json, Dados.class);
+
+        List<Veiculo> veiculos = new ArrayList<>();
+        for (Dados ano : anos) {
+            String anoUrl = URL_BASE + tipo + "/marcas/" + codigoMarca + "/modelos/" + codigoModelo + "/anos/" + ano.codigo();
+            String jsonAno = consumoApi.obterDados(anoUrl);
+            Veiculo veiculo = conversor.obterDados(jsonAno, Veiculo.class);
+            veiculos.add(veiculo);
+        }
+        return veiculos;
+    }
+
+    private String solicitarEntrada(String mensagem) {
+        System.out.print(mensagem);
+        return leitura.nextLine();
+    }
 }
