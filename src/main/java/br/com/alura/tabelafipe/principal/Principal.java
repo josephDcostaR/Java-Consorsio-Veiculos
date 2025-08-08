@@ -27,6 +27,7 @@ public class Principal {
                 Caminhão
                 
                 Digte uma das opções para consultar:
+                
                 """;
 
         System.out.println(menu);
@@ -69,7 +70,7 @@ public class Principal {
                 .forEach(System.out::println);
 
         //Retorna  uma lista dos veiculos pelo input do nome
-        System.out.println("Digite um trecho do nome do carro a ser buscado.");
+        System.out.printf("\nDigite um trecho do %s a ser buscado.", opcao);
         var nomeVeiculo = leitura.nextLine();
 
         List<Dados> modelosFiltrados = modeloLista.modelos().stream()
@@ -80,7 +81,6 @@ public class Principal {
         modelosFiltrados.forEach(System.out::println);
 
         //Retorna o veiculo pelo input do codigo
-
         System.out.println("\nDigite por favor o codigo do modelo para buscar os valores de avaliação");
         var codigoModelo = leitura.nextLine();
 
