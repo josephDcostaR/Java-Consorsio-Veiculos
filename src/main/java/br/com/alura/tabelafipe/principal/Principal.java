@@ -64,7 +64,7 @@ public class Principal {
         json = consumoApi.obterDados(endereco);
         var modeloLista = conversor.obterDados(json, Modelos.class);
 
-        System.out.println("\n modelos dessa marca: ");
+        System.out.println("\nmodelos dessa marca: ");
         modeloLista.modelos().stream()
                 .sorted(Comparator.comparing(Dados::codigo))
                 .forEach(System.out::println);
