@@ -11,6 +11,14 @@ Resultado:
 
 ---
 
+## 📌 Como usar
+1. Escolha o tipo de veículo (**carro**, **moto** ou **caminhão**)
+2. Selecione a **marca**
+3. Escolha o **modelo**
+4. Veja todos os veículos disponíveis com valores por ano
+
+---
+
 ## 🚀 Funcionalidades
 - Consulta de **marcas, modelos e preços** de veículos diretamente da API FIPE.  
 - Filtro por **trecho do nome do modelo** para buscas mais rápidas.  
