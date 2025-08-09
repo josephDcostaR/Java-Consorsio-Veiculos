@@ -78,11 +78,19 @@ public class Principal {
 
     private void exibirVeiculos(String tipo, String codigoMarca, String codigoModelo) {
         List<Veiculo> veiculos = buscarVeiculosPorAno(tipo, codigoMarca, codigoModelo);
+
         System.out.println("\nAvaliações por ano:");
-        veiculos.forEach(v ->
-                System.out.printf("%-10s | %-15s | %-25s | %-4d | %s%n",
-                        v.valor(), v.marca(), v.modelo(), v.ano(), v.tipoCombustivel()));
+        System.out.println("--------------------------------------------------------------------------");
+        System.out.printf("%-10s | %-15s | %-25s | %-4s | %s%n", 
+                          "Valor", "Marca", "Modelo", "Ano", "Combustível");
+        System.out.println("--------------------------------------------------------------------------");
+
+        for (Veiculo v : veiculos) {
+            System.out.printf("%-10s | %-15s | %-25s | %-4d | %s%n",
+                    v.valor(), v.marca(), v.modelo(), v.ano(), v.tipoCombustivel());
+        }
     }
+
 
     private List<Dados> buscarMarcas(String tipo) {
         String url = URL_BASE + tipo + "/marcas";
